@@ -17,6 +17,16 @@ class Menubar:
         file_dropdown.add_separator()
         file_dropdown.add_command(label="Exit",command=parent.master.destroy)
         menubar.add_cascade(label="File",menu=file_dropdown)
+        
+        edit_menu=tk.Menu(menubar,font=font_specs,tearoff=0)
+        edit_menu.add_command(label="Undo",command=parent.textarea.edit_undo,accelerator="Ctrl+Z")
+        edit_menu.add_command(label="Redo",command=parent.textarea.edit_redo,accelerator="Ctrl+Shift+Z")
+        edit_menu.add_separator()
+        edit_menu.add_command(label="Cut",command=parent.cut,accelerator="Ctrl+X")
+        edit_menu.add_command(label="Copy",command=parent.copy,accelerator="Ctrl+C")
+        edit_menu.add_command(label="Paste",command=parent.paste,accelerator="Ctrl+V")
+        menubar.add_cascade(label="Edit",menu=edit_menu)
+    
       
 class StatusBar:
     def __init__(self,parent):
@@ -41,14 +51,14 @@ class textEditor:
         font_specs=("ubuntu",18)
         self.master=master
         self.dlg=None
-        self.textarea=tk.Text(master,font=font_specs)#define the text area
+        self.textarea=tk.Text(master,font=font_specs,undo=True)#define the text area
         self.scroll = tk.Scrollbar(master, command=self.textarea.yview)#define the scroll bar
         self.textarea.configure(yscrollcommand=self.scroll.set)
         self.textarea.pack(side=tk.LEFT,fill=tk.BOTH,expand=True)#making the text-area using textarea defined variable
         self.scroll.pack(side=tk.RIGHT,fill=tk.Y)#making the scroll to the right
         self.menubar=Menubar(self)
         self.statusbar=StatusBar(self)
-        self.ftypes = [('Text Files','*.txt'),('Python files', '*.py'), ('All files', '*'),
+        self.ftypes = [ ('All files', '*'),('Text Files','*.txt'),('Python files', '*.py'),
                   ('HTML Documents','*.html'),('JavaScipt Files','*.js')]
         self.bind_shortcuts()
         
@@ -97,12 +107,32 @@ class textEditor:
         except Exception as e:
             print(e)
             
+    def copy(self, event=None,*args):
+        self.clipboard_clear()
+        text = self.get("sel.first", "sel.last")
+        self.clipboard_append(text)
+
+    def cut(self, event,*args):
+        self.copy()
+        self.delete("sel.first", "sel.last")
+
+    def paste(self, event,*args):
+        text = self.selection_get(selection='CLIPBOARD')
+        self.insert('insert', text)
+        
+    def ctext_selectall(self,event=None,*args):
+        self.textarea.tag_add('sel', '1.0', "end")
+        return "break"
+            
     def bind_shortcuts(self):
         self.textarea.bind('<Control-n>',self.new_file)
         self.textarea.bind('<Control-o>',self.open_file)
         self.textarea.bind('<Control-s>',self.save)
         self.textarea.bind('<Control-S>',self.save_as)
         self.textarea.bind('<Key>',self.statusbar.updateStatusBar)
+        self.textarea.bind('<Control-z>',self.textarea.edit_undo)
+        self.textarea.bind('<Control-Z>',self.textarea.edit_redo)
+        self.textarea.bind('<Control-a>', self.ctext_selectall)
         
 if __name__=="__main__":
      master = tk.Tk()
