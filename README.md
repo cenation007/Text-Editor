@@ -1,4 +1,4 @@
 # Text-Editor
 In progress
 
-A simple text-editor using tkinter GUI of python.
+A simple text-editor made using python's Tkinter module
